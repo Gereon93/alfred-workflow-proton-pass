@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.gereon.proton-pass</string>
+	<key>category</key>
+	<string>Security</string>
+	<key>connections</key>
+	<dict>
+		<key>A1B2C3D4-SEARCH-FILTER-0001</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>A1B2C3D4-RUN-ACTION-0001</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitowards</key>
+				<string></string>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>Gereon</string>
+	<key>description</key>
+	<string>Search and copy passwords from Proton Pass</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Proton Pass</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>2</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>pp</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyalinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching Proton Pass…</string>
+				<key>script</key>
+				<string>python3 search.py "{query}"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Search your Proton Pass vault</string>
+				<key>title</key>
+				<string>Proton Pass</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>A1B2C3D4-SEARCH-FILTER-0001</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>python3 action.py "{query}"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>A1B2C3D4-RUN-ACTION-0001</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>## Proton Pass for Alfred
+
+Search and copy passwords from your Proton Pass vault.
+
+### Setup
+1. Install pass-cli: `curl -fsSL https://proton.me/download/pass-cli/install.sh | bash`
+2. Login: `pass-cli login`
+3. Use `pp` keyword in Alfred
+
+### Usage
+- `pp &lt;query&gt;` — Search items
+- `↩ Enter` — Open URL (or copy password if no URL)
+- `⌃ Ctrl+Enter` — Copy password
+- `⌥ Opt+Enter` — Copy username
+- `⇧ Shift+Enter` — Copy TOTP code
+- `⌘ Cmd+Enter` — Copy URL
+
+### Commands
+- `pp :setup` — Check CLI status
+- `pp :refresh` — Clear cache
+
+### Configuration
+Set in Alfred Workflow Environment Variables:
+- `CLIPBOARD_CLEAR_SECONDS` — Auto-clear clipboard after N seconds (default: 30)
+- `PASS_CLI_PATH` — Custom path to pass-cli binary (default: auto-detect)
+- `VAULT_NAME` — Vault name(s) to search, comma-separated (default: all vaults)
+
+### Commands
+- `pp :vault` — Show available vaults</string>
+	<key>uidata</key>
+	<dict>
+		<key>A1B2C3D4-SEARCH-FILTER-0001</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
+			<key>ypos</key>
+			<real>200</real>
+		</dict>
+		<key>A1B2C3D4-RUN-ACTION-0001</key>
+		<dict>
+			<key>xpos</key>
+			<real>400</real>
+			<key>ypos</key>
+			<real>200</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>30</string>
+				<key>placeholder</key>
+				<string>30</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Seconds before clipboard is automatically cleared after copying a secret</string>
+			<key>label</key>
+			<string>Clipboard Clear Seconds</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>CLIPBOARD_CLEAR_SECONDS</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string>pass-cli</string>
+				<key>placeholder</key>
+				<string>pass-cli</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Path to the pass-cli binary (leave default if installed via official script)</string>
+			<key>label</key>
+			<string>pass-cli Path</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>PASS_CLI_PATH</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Personal, Work</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Vault name(s) to search, comma-separated. Leave empty to search all vaults. Use pp :vault to see available vaults.</string>
+			<key>label</key>
+			<string>Vault Name(s)</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>VAULT_NAME</string>
+		</dict>
+	</array>
+	<key>version</key>
+	<string>0.1.0</string>
+	<key>webaddress</key>
+	<string>https://github.com/gereon/alfred-workflow-proton-pass</string>
+</dict>
+</plist>
