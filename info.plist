@@ -3,9 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>com.gereon.proton-pass</string>
-	<key>category</key>
-	<string>Security</string>
+	<string>de.murgbyte.alfred-proton-pass</string>
 	<key>connections</key>
 	<dict>
 		<key>A1B2C3D4-SEARCH-FILTER-0001</key>
@@ -23,7 +21,7 @@
 		</array>
 	</dict>
 	<key>createdby</key>
-	<string>Gereon</string>
+	<string>Gereon Godde</string>
 	<key>description</key>
 	<string>Search and copy passwords from Proton Pass</string>
 	<key>disabled</key>
@@ -36,7 +34,7 @@
 			<key>config</key>
 			<dict>
 				<key>alfredfiltersresults</key>
-				<false/>
+				<true/>
 				<key>alfredfiltersresultsmatchmode</key>
 				<integer>2</integer>
 				<key>argumenttreatemptyqueryasnil</key>
@@ -60,7 +58,7 @@
 				<key>runningsubtext</key>
 				<string>Searching Proton Pass…</string>
 				<key>script</key>
-				<string>python3 search.py "{query}"</string>
+				<string>python3 search.py '{query}'</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -106,48 +104,56 @@
 		</dict>
 	</array>
 	<key>readme</key>
-	<string>## Proton Pass for Alfred
+	<string># Proton Pass for Alfred
 
-Search and copy passwords from your Proton Pass vault.
+	Search and copy passwords from your Proton Pass vault directly from Alfred.
 
-### Setup
-1. Install pass-cli: `curl -fsSL https://proton.me/download/pass-cli/install.sh | bash`
-2. Login: `pass-cli login`
-3. Use `pp` keyword in Alfred
+	**Note:** This project was gevibecoded.
 
-### Usage
-- `pp &lt;query&gt;` — Search items
-- `↩ Enter` — Open URL (or copy password if no URL)
-- `⌃ Ctrl+Enter` — Copy password
-- `⌥ Opt+Enter` — Copy username
-- `⇧ Shift+Enter` — Copy TOTP code
-- `⌘ Cmd+Enter` — Copy URL
+	## Prerequisites
 
-### Commands
-- `pp :setup` — Check CLI status
-- `pp :refresh` — Clear cache
+	1.  **Install `pass-cli`**:
+	Run this command in your Terminal:
+	`curl -fsSL https://proton.me/download/pass-cli/install.sh | bash`
 
-### Configuration
-Set in Alfred Workflow Environment Variables:
-- `CLIPBOARD_CLEAR_SECONDS` — Auto-clear clipboard after N seconds (default: 30)
-- `PASS_CLI_PATH` — Custom path to pass-cli binary (default: auto-detect)
-- `VAULT_NAME` — Vault name(s) to search, comma-separated (default: all vaults)
+	2.  **Login**:
+	Run `pass-cli login` in your Terminal and follow the instructions.
 
-### Commands
-- `pp :vault` — Show available vaults</string>
+	## Usage
+
+	-   Type `pp` followed by your search query.
+	-   `↩ Enter` — Open URL (or copy password if no URL)
+	-   `⌃ Ctrl+Enter` — Copy password
+	-   `⌥ Opt+Enter` — Copy username
+	-   `⇧ Shift+Enter` — Copy TOTP code
+	-   `⌘ Cmd+Enter` — Copy URL
+
+	### Commands
+
+	-   `pp :setup` — Check CLI status and login session
+	-   `pp :refresh` — Clear cache and force reload from Proton
+	-   `pp :vault` — Show available vaults
+
+	## Configuration
+
+	Set these environment variables in the Alfred Workflow configuration:
+
+	-   `VAULT_NAME`: (Optional) Comma-separated list of vault names to search (e.g., `Personal,Work`). If empty, all vaults are searched.
+	-   `PASS_CLI_PATH`: (Optional) Custom path to the `pass-cli` binary.
+	-   `CLIPBOARD_CLEAR_SECONDS`: (Default: 30) Seconds after which the clipboard is cleared.</string>
 	<key>uidata</key>
 	<dict>
-		<key>A1B2C3D4-SEARCH-FILTER-0001</key>
-		<dict>
-			<key>xpos</key>
-			<real>100</real>
-			<key>ypos</key>
-			<real>200</real>
-		</dict>
 		<key>A1B2C3D4-RUN-ACTION-0001</key>
 		<dict>
 			<key>xpos</key>
 			<real>400</real>
+			<key>ypos</key>
+			<real>200</real>
+		</dict>
+		<key>A1B2C3D4-SEARCH-FILTER-0001</key>
+		<dict>
+			<key>xpos</key>
+			<real>100</real>
 			<key>ypos</key>
 			<real>200</real>
 		</dict>
@@ -221,6 +227,6 @@ Set in Alfred Workflow Environment Variables:
 	<key>version</key>
 	<string>0.1.0</string>
 	<key>webaddress</key>
-	<string>https://github.com/gereon/alfred-workflow-proton-pass</string>
+	<string>https://github.com/Gereon93/alfred-workflow-proton-pass</string>
 </dict>
 </plist>

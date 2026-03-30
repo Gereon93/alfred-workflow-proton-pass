@@ -1,0 +1,48 @@
+name: Build and Release Alfred Workflow
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Package Alfred Workflow
+        run: |
+          # ZIP up all relevant files into 'Proton Pass.alfredworkflow'
+          # Excluding git-related files and any local cache
+          zip -r "Proton Pass.alfredworkflow" \
+            info.plist \
+            *.py \
+            icon.png \
+            icon.svg \
+            icons/ \
+            README.md \
+            LICENSE.md \
+            -x "*.DS_Store*"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: Proton Pass.alfredworkflow
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifact (manual run)
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: Proton Pass Workflow
+          path: "Proton Pass.alfredworkflow"
