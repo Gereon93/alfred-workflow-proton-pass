@@ -58,7 +58,7 @@
 				<key>runningsubtext</key>
 				<string>Searching Proton Pass…</string>
 				<key>script</key>
-				<string>python3 search.py '{query}'</string>
+				<string>python3 search.py "{query}"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>

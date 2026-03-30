@@ -420,10 +420,7 @@ def handle_command(query):
 def main():
     query = sys.argv[1] if len(sys.argv) > 1 else ""
 
-    # Debug: write argv to log file
-    log_path = os.path.join(get_cache_dir(), "debug.log")
-    with open(log_path, "a") as f:
-        f.write(f"argv={sys.argv!r} query={query!r}\n")
+
 
     # Handle :commands
     if query.startswith(":"):
@@ -456,18 +453,17 @@ def main():
             print(json.dumps({"items": [{"title": msg, "subtitle": sub, "valid": False}]}))
             return
 
-    # Filter
-    filtered = [i for i in items if item_matches(i, query)]
-
-    if not filtered:
+    # Alfred filters results itself (alfredfiltersresults=true),
+    # so we return all items and let Alfred do the fuzzy matching.
+    if not items:
         print(json.dumps({"items": [{
-            "title": f"No items matching '{query}'" if query else "No items in vault",
-            "subtitle": "Try a different search term",
+            "title": "No items in vault",
+            "subtitle": "Try pp :setup to check your configuration",
             "valid": False,
         }]}))
         return
 
-    alfred_items = [make_alfred_item(i) for i in filtered]
+    alfred_items = [make_alfred_item(i) for i in items]
     print(json.dumps({"items": alfred_items}))
 
 
