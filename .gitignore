@@ -122,3 +122,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.claude/session-intent.md
+
+.claude/session-plan.md
+
+.claude/settings.local.json
+
+.DS_Store
