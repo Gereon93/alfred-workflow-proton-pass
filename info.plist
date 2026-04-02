@@ -6,11 +6,11 @@
 	<string>de.murgbyte.alfred-proton-pass</string>
 	<key>connections</key>
 	<dict>
-		<key>A1B2C3D4-SEARCH-FILTER-0001</key>
+		<key>SEARCH-FILTER</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>A1B2C3D4-RUN-ACTION-0001</string>
+				<string>RUN-ACTION</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -58,7 +58,7 @@
 				<key>runningsubtext</key>
 				<string>Searching Proton Pass…</string>
 				<key>script</key>
-				<string>python3 search.py "{query}"</string>
+				<string>python3 search.py</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -75,7 +75,7 @@
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>A1B2C3D4-SEARCH-FILTER-0001</string>
+			<string>SEARCH-FILTER</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
@@ -85,7 +85,7 @@
 				<key>concurrently</key>
 				<false/>
 				<key>escaping</key>
-				<integer>102</integer>
+				<integer>0</integer>
 				<key>script</key>
 				<string>python3 action.py "{query}"</string>
 				<key>scriptargtype</key>
@@ -98,7 +98,7 @@
 			<key>type</key>
 			<string>alfred.workflow.action.script</string>
 			<key>uid</key>
-			<string>A1B2C3D4-RUN-ACTION-0001</string>
+			<string>RUN-ACTION</string>
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
@@ -106,51 +106,29 @@
 	<key>readme</key>
 	<string># Proton Pass for Alfred
 
-	Search and copy passwords from your Proton Pass vault directly from Alfred.
+Search and copy passwords from your Proton Pass vault directly from Alfred.
 
-	**Note:** This project was gevibecoded.
+## Setup
+1. Install pass-cli: `curl -fsSL https://proton.me/download/pass-cli/install.sh | bash`
+2. Login: `pass-cli login`
 
-	## Prerequisites
+## Usage
+Type `pp` and start typing to filter. Each item shows 3 actions:
+- **Item — Copy Password** → copies password to clipboard
+- **Item — Copy Username** → copies username to clipboard
+- **Item — Open URL** → opens URL in browser
 
-	1.  **Install `pass-cli`**:
-	Run this command in your Terminal:
-	`curl -fsSL https://proton.me/download/pass-cli/install.sh | bash`
-
-	2.  **Login**:
-	Run `pass-cli login` in your Terminal and follow the instructions.
-
-	## Usage
-
-	-   Type `pp` followed by your search query.
-	-   `↩ Enter` — Open URL (or copy password if no URL)
-	-   `⌃ Ctrl+Enter` — Copy password
-	-   `⌥ Opt+Enter` — Copy username
-	-   `⇧ Shift+Enter` — Copy TOTP code
-	-   `⌘ Cmd+Enter` — Copy URL
-
-	### Commands
-
-	-   `pp :setup` — Check CLI status and login session
-	-   `pp :refresh` — Clear cache and force reload from Proton
-	-   `pp :vault` — Show available vaults
-
-	## Configuration
-
-	Set these environment variables in the Alfred Workflow configuration:
-
-	-   `VAULT_NAME`: (Optional) Comma-separated list of vault names to search (e.g., `Personal,Work`). If empty, all vaults are searched.
-	-   `PASS_CLI_PATH`: (Optional) Custom path to the `pass-cli` binary.
-	-   `CLIPBOARD_CLEAR_SECONDS`: (Default: 30) Seconds after which the clipboard is cleared.</string>
+Commands: `pp :setup`, `pp :refresh`, `pp :vault`</string>
 	<key>uidata</key>
 	<dict>
-		<key>A1B2C3D4-RUN-ACTION-0001</key>
+		<key>RUN-ACTION</key>
 		<dict>
 			<key>xpos</key>
 			<real>400</real>
 			<key>ypos</key>
 			<real>200</real>
 		</dict>
-		<key>A1B2C3D4-SEARCH-FILTER-0001</key>
+		<key>SEARCH-FILTER</key>
 		<dict>
 			<key>xpos</key>
 			<real>100</real>
@@ -173,7 +151,7 @@
 				<true/>
 			</dict>
 			<key>description</key>
-			<string>Seconds before clipboard is automatically cleared after copying a secret</string>
+			<string>Seconds before clipboard is automatically cleared</string>
 			<key>label</key>
 			<string>Clipboard Clear Seconds</string>
 			<key>type</key>
@@ -185,16 +163,16 @@
 			<key>config</key>
 			<dict>
 				<key>default</key>
-				<string>pass-cli</string>
+				<string></string>
 				<key>placeholder</key>
-				<string>pass-cli</string>
+				<string></string>
 				<key>required</key>
 				<false/>
 				<key>trim</key>
 				<true/>
 			</dict>
 			<key>description</key>
-			<string>Path to the pass-cli binary (leave default if installed via official script)</string>
+			<string>Path to pass-cli (leave empty for auto-detect)</string>
 			<key>label</key>
 			<string>pass-cli Path</string>
 			<key>type</key>
@@ -215,7 +193,7 @@
 				<true/>
 			</dict>
 			<key>description</key>
-			<string>Vault name(s) to search, comma-separated. Leave empty to search all vaults. Use pp :vault to see available vaults.</string>
+			<string>Comma-separated vault names. Leave empty for all vaults.</string>
 			<key>label</key>
 			<string>Vault Name(s)</string>
 			<key>type</key>
@@ -225,7 +203,7 @@
 		</dict>
 	</array>
 	<key>version</key>
-	<string>0.1.0</string>
+	<string>0.3.0</string>
 	<key>webaddress</key>
 	<string>https://github.com/Gereon93/alfred-workflow-proton-pass</string>
 </dict>
