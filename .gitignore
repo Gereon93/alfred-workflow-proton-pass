@@ -5,3 +5,4 @@ __pycache__/
 .gemini/
 /items.json
 prefs.plist
+FORUM_POST.md
