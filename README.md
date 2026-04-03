@@ -23,12 +23,12 @@ Search and copy passwords from your Proton Pass vault directly from Alfred.
 
 ## Usage
 
--   Type `pp` followed by your search query.
--   `↩ Enter` — Open URL (or copy password if no URL)
--   `⌃ Ctrl+Enter` — Copy password
--   `⌥ Opt+Enter` — Copy username
--   `⇧ Shift+Enter` — Copy TOTP code
--   `⌘ Cmd+Enter` — Copy URL
+Type `pp` followed by your search query. Each vault item expands into separate rows:
+
+-   `Title — Copy Password` → press `↩ Enter` to copy the password
+-   `Title — Copy Username` → press `↩ Enter` to copy the username
+-   `Title — Open URL` → press `↩ Enter` to open the URL in your browser
+-   `Title — Copy TOTP` → press `↩ Enter` to copy the current TOTP code (only shown when configured)
 
 ### Commands
 
