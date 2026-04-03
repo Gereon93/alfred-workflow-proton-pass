@@ -113,10 +113,11 @@ Search and copy passwords from your Proton Pass vault directly from Alfred.
 2. Login: `pass-cli login`
 
 ## Usage
-Type `pp` and start typing to filter. Each item shows 3 actions:
+Type `pp` and start typing to filter. Each vault item expands into separate rows:
 - **Item — Copy Password** → copies password to clipboard
 - **Item — Copy Username** → copies username to clipboard
 - **Item — Open URL** → opens URL in browser
+- **Item — Copy TOTP** → copies current TOTP code (only shown when configured)
 
 Commands: `pp :setup`, `pp :refresh`, `pp :vault`</string>
 	<key>uidata</key>
