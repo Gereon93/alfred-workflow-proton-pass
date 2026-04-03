@@ -24,7 +24,7 @@ Each vault item expands into separate action rows:
 
 Type `ppass :setup` to check CLI status and login session. Type `ppass :refresh` to clear the cache and reload from Proton. Type `ppass :vault` to show available vaults.
 
-Copied passwords and usernames are automatically cleared from the clipboard after the time configured in the Workflow's Configuration.
+Copied passwords and usernames are automatically cleared from the clipboard after the time configured in the Workflow's Configuration. To limit searching to specific vaults, set their names in the Workflow's Configuration.
 
 ## Disclaimer
 
