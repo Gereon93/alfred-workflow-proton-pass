@@ -23,7 +23,7 @@ Search and copy passwords from your Proton Pass vault directly from Alfred.
 
 ## Usage
 
-Type `pp` followed by your search query. Each vault item expands into separate rows:
+Type `ppass` followed by your search query. Each vault item expands into separate rows:
 
 -   `Title — Copy Password` → press `↩ Enter` to copy the password
 -   `Title — Copy Username` → press `↩ Enter` to copy the username
@@ -32,9 +32,9 @@ Type `pp` followed by your search query. Each vault item expands into separate r
 
 ### Commands
 
--   `pp :setup` — Check CLI status and login session
--   `pp :refresh` — Clear cache and force reload from Proton
--   `pp :vault` — Show available vaults
+-   `ppass :setup` — Check CLI status and login session
+-   `ppass :refresh` — Clear cache and force reload from Proton
+-   `ppass :vault` — Show available vaults
 
 ## Configuration
 
