@@ -4,3 +4,4 @@ __pycache__/
 .claude/
 .gemini/
 /items.json
+prefs.plist
