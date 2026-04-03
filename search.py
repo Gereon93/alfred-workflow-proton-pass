@@ -244,67 +244,77 @@ def make_rows_for_item(item):
     return rows
 
 
-# -- Commands --
+# -- Command rows (always included, filtered by Alfred) --
 
-def handle_command(query):
-    cmd = query.lstrip(":").strip().lower()
+def make_command_rows(vault_names):
+    rows = []
 
-    if cmd == "refresh":
-        path = get_cache_path()
-        if os.path.exists(path):
-            os.remove(path)
-        return {"items": [{"title": "Cache cleared", "subtitle": "Refreshing on next search", "valid": False}]}
+    # :refresh — triggers action.py to clear cache
+    rows.append({
+        "uid": "cmd/refresh",
+        "title": "Clear cache and reload",
+        "subtitle": "Force refresh from Proton Pass",
+        "arg": "refresh",
+        "match": ":refresh refresh cache clear reload",
+        "icon": {"path": "icon.png"},
+        "variables": {"action": "refresh"},
+    })
 
-    if cmd.startswith("vault"):
-        vaults, error = fetch_vault_list()
-        if not vaults:
-            return {"items": [{"title": "Could not list vaults", "subtitle": error or "", "valid": False}]}
-        configured = get_configured_vaults()
-        items = []
-        if not configured:
-            items.append({"title": "All vaults (no filter)", "subtitle": "Set VAULT_NAME to limit", "valid": False})
-        for v in vaults:
-            name = v.get("name", "?")
-            pfx = "✓ " if name in configured else ""
-            items.append({"title": f"{pfx}{name}", "subtitle": "Set VAULT_NAME to filter", "valid": False})
-        return {"items": items}
-
-    if cmd.startswith("setup"):
-        items = []
-        cli_ok = check_cli_available()
-        items.append({
-            "title": f"pass-cli: {'✓ Installed' if cli_ok else '✗ Not found'}",
-            "subtitle": f"Path: {PASS_CLI}" if cli_ok else "Install: curl -fsSL https://proton.me/download/pass-cli/install.sh | bash",
+    # :setup — show CLI and session status
+    cli_ok = check_cli_available()
+    rows.append({
+        "uid": "cmd/setup-cli",
+        "title": f"pass-cli: {'Installed' if cli_ok else 'Not found'}",
+        "subtitle": f"Path: {PASS_CLI}" if cli_ok else "Install: curl -fsSL https://proton.me/download/pass-cli/install.sh | bash",
+        "match": ":setup setup status cli",
+        "icon": {"path": "icon.png"},
+        "valid": False,
+    })
+    if cli_ok:
+        logged_in = check_logged_in()
+        rows.append({
+            "uid": "cmd/setup-session",
+            "title": f"Session: {'Active' if logged_in else 'Not logged in'}",
+            "subtitle": "Authenticated" if logged_in else "Run 'pass-cli login' in Terminal",
+            "match": ":setup setup status session login",
+            "icon": {"path": "icon.png"},
             "valid": False,
         })
-        if cli_ok:
-            ok = check_logged_in()
-            items.append({
-                "title": f"Session: {'✓ Active' if ok else '✗ Not logged in'}",
-                "subtitle": "Run 'pass-cli login' in Terminal" if not ok else "Authenticated",
-                "valid": False,
-            })
-        return {"items": items}
 
-    return None
+    # :vault — show configured vaults
+    configured = get_configured_vaults()
+    if not configured:
+        rows.append({
+            "uid": "cmd/vault-all",
+            "title": "All vaults (no filter)",
+            "subtitle": "Set VAULT_NAME in workflow config to limit",
+            "match": ":vault vault vaults",
+            "icon": {"path": "icon.png"},
+            "valid": False,
+        })
+    for name in (vault_names or []):
+        pfx = "Active: " if name in configured else ""
+        rows.append({
+            "uid": f"cmd/vault/{name}",
+            "title": f"{pfx}{name}",
+            "subtitle": "Set VAULT_NAME in workflow config to filter",
+            "match": f":vault vault vaults {name}",
+            "icon": {"path": "icon.png"},
+            "valid": False,
+        })
+
+    return rows
 
 
 # -- Main --
 
 def main():
-    query = sys.argv[1] if len(sys.argv) > 1 else ""
-
-    if query.startswith(":"):
-        result = handle_command(query)
-        if result:
-            print(json.dumps(result))
-            return
-
     if not check_cli_available():
         print(json.dumps({"items": [{"title": "pass-cli not found", "valid": False}]}))
         return
 
     items = load_cached_items()
+    vault_names = []
     if items is None:
         items, error = fetch_items()
         if items is None:
@@ -315,15 +325,17 @@ def main():
                 print(json.dumps({"items": [{"title": "Error", "subtitle": error or "Unknown", "valid": False}]}))
             return
 
-    if not items:
-        print(json.dumps({"items": [{"title": "No items in vault", "valid": False}]}))
-        return
+    if items:
+        vault_names = list({i.get("vaultName", "") for i in items if i.get("vaultName")})
 
     # Each item → multiple rows (password, username, url, totp)
     # Alfred filters these with alfredfiltersresults=true
     all_rows = []
-    for item in items:
+    for item in (items or []):
         all_rows.extend(make_rows_for_item(item))
+
+    # Command rows are always included; Alfred filters them via match field
+    all_rows.extend(make_command_rows(vault_names))
 
     print(json.dumps({"items": all_rows}))
 
