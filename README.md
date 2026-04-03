@@ -43,3 +43,7 @@ Set these environment variables in the Alfred Workflow configuration:
 -   `VAULT_NAME`: (Optional) Comma-separated list of vault names to search (e.g., `Personal,Work`). If empty, all vaults are searched.
 -   `PASS_CLI_PATH`: (Optional) Custom path to the `pass-cli` binary.
 -   `CLIPBOARD_CLEAR_SECONDS`: (Default: 30) Seconds after which the clipboard is cleared.
+
+## Disclaimer
+
+This is an unofficial, community-maintained project and is not affiliated with, endorsed by, or associated with Proton AG. Proton and Proton Pass are trademarks of Proton AG.

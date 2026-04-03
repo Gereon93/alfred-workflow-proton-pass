@@ -119,7 +119,10 @@ Type `ppass` and start typing to filter. Each vault item expands into separate r
 - **Item — Open URL** → opens URL in browser
 - **Item — Copy TOTP** → copies current TOTP code (only shown when configured)
 
-Commands: `ppass :setup`, `ppass :refresh`, `ppass :vault`</string>
+Commands: `ppass :setup`, `ppass :refresh`, `ppass :vault`
+
+## Disclaimer
+This is an unofficial, community-maintained project and is not affiliated with, endorsed by, or associated with Proton AG. Proton and Proton Pass are trademarks of Proton AG.</string>
 	<key>uidata</key>
 	<dict>
 		<key>RUN-ACTION</key>
