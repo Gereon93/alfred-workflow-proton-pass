@@ -98,6 +98,14 @@ def main():
             copy_to_clipboard(code)
             clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
 
+    elif action == "refresh":
+        cache_dir = os.environ.get("alfred_workflow_cache", "")
+        if not cache_dir:
+            cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "alfred-proton-pass")
+        cache_file = os.path.join(cache_dir, "items.json")
+        if os.path.exists(cache_file):
+            os.remove(cache_file)
+
 
 if __name__ == "__main__":
     main()
