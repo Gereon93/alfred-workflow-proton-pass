@@ -12,6 +12,7 @@ import sys
 import time
 
 CACHE_TTL = 300
+AUTH_TTL = 60
 _DEFAULT_CLI_PATHS = [
     os.path.expanduser("~/.local/bin/pass-cli"),
     "/usr/local/bin/pass-cli",
@@ -63,6 +64,42 @@ def load_cached_items():
 def save_cache(items):
     with open(get_cache_path(), "w") as f:
         json.dump(items, f)
+
+
+# -- Auth status (cached briefly so pass-cli test isn't run per keystroke) --
+
+def get_auth_cache_path():
+    return os.path.join(get_cache_dir(), "auth.json")
+
+
+def write_auth_flag(logged_in):
+    try:
+        with open(get_auth_cache_path(), "w") as f:
+            json.dump({"logged_in": bool(logged_in)}, f)
+    except OSError:
+        pass
+
+
+def get_login_status():
+    """Return True (logged in), False (logged out), or None (could not determine).
+
+    The result is cached for AUTH_TTL so a normal search doesn't spawn
+    'pass-cli test' on every keystroke. action.py flips the flag to False on an
+    auth failure, so the very next search surfaces the logged-out banner.
+    """
+    path = get_auth_cache_path()
+    try:
+        if os.path.exists(path) and time.time() - os.path.getmtime(path) < AUTH_TTL:
+            with open(path) as f:
+                val = json.load(f).get("logged_in")
+                if val is not None:
+                    return val
+    except (OSError, json.JSONDecodeError):
+        pass
+    status = probe_login()
+    if status is not None:
+        write_auth_flag(status)
+    return status
 
 
 # -- CLI --
@@ -152,6 +189,7 @@ def fetch_items():
                 last_error = error
         if all_items:
             save_cache(all_items)
+            write_auth_flag(True)
             return all_items, None
         return None, last_error or "No items found"
     except FileNotFoundError:
@@ -170,12 +208,21 @@ def check_cli_available():
         return False
 
 
-def check_logged_in():
+def probe_login():
+    """True=logged in, False=logged out, None=could not determine (timeout/missing).
+
+    None must stay distinct from False: a transient timeout should fail open
+    (keep serving items) rather than wrongly flash a logged-out banner.
+    """
     try:
         r = subprocess.run([PASS_CLI, "test"], capture_output=True, text=True, timeout=10)
         return r.returncode == 0
     except (FileNotFoundError, subprocess.TimeoutExpired):
-        return False
+        return None
+
+
+def check_logged_in():
+    return probe_login() is True
 
 
 # -- Build Alfred rows: one item → up to 4 rows --
@@ -308,9 +355,42 @@ def make_command_rows(vault_names):
 
 # -- Main --
 
+def filter_rows(rows, query):
+    """Filter rows by the typed query (alfredfiltersresults is off, so we filter).
+
+    Token-based case-insensitive substring match against each row's `match`
+    field (falls back to title). Empty query returns everything.
+    """
+    tokens = query.lower().split()
+    if not tokens:
+        return rows
+    out = []
+    for r in rows:
+        hay = (r.get("match") or r.get("title", "")).lower()
+        if all(t in hay for t in tokens):
+            out.append(r)
+    return out
+
+
+def login_banner():
+    return {"items": [{
+        "title": "Not logged in to Proton Pass",
+        "subtitle": "Run 'pass-cli login' in Terminal, then search again",
+        "valid": False,
+        "icon": {"path": "icon.png"},
+    }]}
+
+
 def main():
     if not check_cli_available():
         print(json.dumps({"items": [{"title": "pass-cli not found", "valid": False}]}))
+        return
+
+    # Check login BEFORE serving the cache: a warm item cache must never mask a
+    # logged-out session (otherwise stale items show and actions fail silently).
+    # None = couldn't determine -> fail open and keep serving items.
+    if get_login_status() is False:
+        print(json.dumps(login_banner()))
         return
 
     items = load_cached_items()
@@ -329,13 +409,17 @@ def main():
         vault_names = list({i.get("vaultName", "") for i in items if i.get("vaultName")})
 
     # Each item → multiple rows (password, username, url, totp)
-    # Alfred filters these with alfredfiltersresults=true
     all_rows = []
     for item in (items or []):
         all_rows.extend(make_rows_for_item(item))
 
-    # Command rows are always included; Alfred filters them via match field
+    # Command rows (:refresh, :setup, :vault) are matched by the same filter
     all_rows.extend(make_command_rows(vault_names))
+
+    # We filter in-script (alfredfiltersresults is off) so status rows like the
+    # logged-out banner can stay visible regardless of the typed query.
+    query = sys.argv[1].strip() if len(sys.argv) > 1 else ""
+    all_rows = filter_rows(all_rows, query)
 
     print(json.dumps({"items": all_rows}))
 
