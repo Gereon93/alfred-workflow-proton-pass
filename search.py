@@ -83,17 +83,17 @@ def write_auth_flag(logged_in):
 def get_login_status():
     """Return True (logged in), False (logged out), or None (could not determine).
 
-    The result is cached for AUTH_TTL so a normal search doesn't spawn
-    'pass-cli test' on every keystroke. action.py flips the flag to False on an
-    auth failure, so the very next search surfaces the logged-out banner.
+    Only a cached *logged-in* result short-circuits (the hot, per-keystroke path
+    while logged in). A logged-out/unknown cache is re-probed every time so a
+    fresh 'pass-cli login' is picked up immediately instead of being stuck
+    behind AUTH_TTL — the banner subtitle promises "then search again".
     """
     path = get_auth_cache_path()
     try:
         if os.path.exists(path) and time.time() - os.path.getmtime(path) < AUTH_TTL:
             with open(path) as f:
-                val = json.load(f).get("logged_in")
-                if val is not None:
-                    return val
+                if json.load(f).get("logged_in") is True:
+                    return True
     except (OSError, json.JSONDecodeError):
         pass
     status = probe_login()
@@ -222,7 +222,9 @@ def probe_login():
 
 
 def check_logged_in():
-    return probe_login() is True
+    # Route through the cache so the :setup row doesn't re-spawn 'pass-cli test'
+    # on every keystroke (main() has usually warmed it already this run).
+    return get_login_status() is True
 
 
 # -- Build Alfred rows: one item → up to 4 rows --

@@ -109,6 +109,24 @@ def test_logged_in_query_filters_items():
     print("PASS: logged-in query filters items in-script")
 
 
+def test_relogin_is_picked_up_despite_cached_logout():
+    """After re-login, a cached logged-out flag must not keep showing the banner."""
+    with tempfile.TemporaryDirectory() as d:
+        _warm_cache(d)
+        # action.py (or an earlier probe) marked the session logged out
+        with open(os.path.join(d, "auth.json"), "w") as f:
+            json.dump({"logged_in": False}, f)
+        stub = _write_stub(d, STUB_LOGGED_IN)  # but the user has since logged in
+        result = _run_search(d, stub, query="last")
+
+        titles = [i.get("title", "") for i in result["items"]]
+        assert any("last.fm" in t.lower() for t in titles), \
+            f"re-login not picked up (cached logout stuck): {titles}"
+        assert not any("not logged in" in t.lower() for t in titles), \
+            f"stale logout banner persisted after re-login: {titles}"
+    print("PASS: re-login picked up despite cached logout flag")
+
+
 def test_logged_in_with_warm_cache_shows_items():
     """Regression guard: when logged in, the warm cache still serves items fast."""
     with tempfile.TemporaryDirectory() as d:
@@ -162,6 +180,7 @@ if __name__ == "__main__":
     test_logged_out_with_warm_cache_shows_login_banner()
     test_logged_out_banner_survives_a_typed_query()
     test_logged_in_query_filters_items()
+    test_relogin_is_picked_up_despite_cached_logout()
     test_logged_in_with_warm_cache_shows_items()
     test_action_auth_failure_marks_logged_out_and_notifies()
     print("\nAll tests passed.")

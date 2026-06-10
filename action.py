@@ -49,13 +49,20 @@ def mark_logged_out():
 
 
 def notify(message):
-    msg = message.replace("\\", "\\\\").replace('"', '\\"')
+    # Pass text as argv so untrusted error text can't break out of the
+    # AppleScript string or inject code; bounded by a timeout so a hung
+    # osascript can't stall the action.
+    message = " ".join(str(message).splitlines()).strip() or "Action failed"
     try:
         subprocess.run(
-            ["osascript", "-e", f'display notification "{msg}" with title "Proton Pass"'],
-            capture_output=True,
+            ["osascript",
+             "-e", "on run argv",
+             "-e", "display notification (item 1 of argv) with title (item 2 of argv)",
+             "-e", "end run",
+             message, "Proton Pass"],
+            capture_output=True, timeout=5,
         )
-    except (FileNotFoundError, OSError):
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
         pass
 
 
