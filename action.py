@@ -8,6 +8,7 @@ import os
 import json
 import subprocess
 import sys
+from urllib.parse import urlparse
 
 _DEFAULT_CLI_PATHS = [
     os.path.expanduser("~/.local/bin/pass-cli"),
@@ -127,24 +128,35 @@ def copy_secret(fetch, vault_name, item_title):
         handle_failure(error)
 
 
-WEB_SCHEMES = ("http://", "https://")
+WEB_SCHEMES = ("http", "https")
 
 
-def open_url(url):
-    """Hand only web URLs to `open`.
+def web_target(url):
+    """Return the http(s) URL to hand to `open`, or None if it isn't a web URL.
 
     The URL comes from a vault entry, and vaults can be shared — `open` would
     otherwise launch a local file or a custom scheme handler on someone else's
-    say-so. Entries stored without a scheme (bare domains) stay openable as https.
+    say-so. Entries stored without a scheme stay openable as https; that
+    includes bare host:port, which urlparse reads as a scheme of its own.
     """
-    schemeless = ":" not in url and not url.startswith("/")
-    target = f"https://{url}" if schemeless else url
-    if not target.startswith(WEB_SCHEMES):
+    parsed = urlparse(url)
+    scheme = parsed.scheme.lower()
+    if scheme in WEB_SCHEMES:
+        return url
+    looks_like_port = parsed.path.split("/")[0].isdigit()
+    if (not scheme or looks_like_port) and not url.startswith("/"):
+        return f"https://{url}"
+    return None
+
+
+def open_url(url):
+    target = web_target(url)
+    if target is None:
         notify(f"Refused to open a non-web URL: {url}")
         return
     try:
-        subprocess.run(["open", target], timeout=10)
-    except (OSError, subprocess.TimeoutExpired):
+        subprocess.run(["open", target], timeout=10, check=True)
+    except (OSError, subprocess.TimeoutExpired, subprocess.CalledProcessError):
         notify("Could not open URL")
 
 

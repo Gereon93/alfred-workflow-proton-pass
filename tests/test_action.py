@@ -197,20 +197,27 @@ def test_copy_secret_reports_failures_instead_of_copying(monkeypatch):
 @pytest.mark.parametrize("url,expected", [
     ("https://last.fm", "https://last.fm"),
     ("http://last.fm", "http://last.fm"),
+    ("HTTPS://last.fm", "HTTPS://last.fm"),
     ("last.fm", "https://last.fm"),
     ("last.fm/login?a=b", "https://last.fm/login?a=b"),
+    ("last.fm:8080", "https://last.fm:8080"),
+    ("localhost:3000", "https://localhost:3000"),
+    ("example.org:8443/x", "https://example.org:8443/x"),
 ])
 def test_open_url_opens_web_targets(spy_run, url, expected):
     action.open_url(url)
     cmd, kwargs = spy_run[0]
     assert cmd == ["open", expected]
     assert kwargs["timeout"] == 10
+    assert kwargs["check"] is True
 
 
 @pytest.mark.parametrize("url", [
     "file:///etc/passwd",
     "ftp://example.com/x",
     "x-malicious-handler://run",
+    "javascript:alert(1)",
+    "mailto:someone@example.com",
     "/Applications/Calculator.app",
 ])
 def test_open_url_refuses_non_web_targets(monkeypatch, url):
@@ -221,9 +228,14 @@ def test_open_url_refuses_non_web_targets(monkeypatch, url):
     assert "Refused" in messages[0]
 
 
-def test_open_url_reports_a_hung_open(monkeypatch):
+@pytest.mark.parametrize("exc", [
+    subprocess.TimeoutExpired("open", 10),
+    subprocess.CalledProcessError(1, "open"),
+    OSError("no such binary"),
+])
+def test_open_url_reports_a_failed_open(monkeypatch, exc):
     def boom(*_a, **_k):
-        raise subprocess.TimeoutExpired("open", 10)
+        raise exc
 
     monkeypatch.setattr(action.subprocess, "run", boom)
     messages = []
