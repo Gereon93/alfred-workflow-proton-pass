@@ -127,6 +127,27 @@ def copy_secret(fetch, vault_name, item_title):
         handle_failure(error)
 
 
+WEB_SCHEMES = ("http://", "https://")
+
+
+def open_url(url):
+    """Hand only web URLs to `open`.
+
+    The URL comes from a vault entry, and vaults can be shared — `open` would
+    otherwise launch a local file or a custom scheme handler on someone else's
+    say-so. Entries stored without a scheme (bare domains) stay openable as https.
+    """
+    schemeless = ":" not in url and not url.startswith("/")
+    target = f"https://{url}" if schemeless else url
+    if not target.startswith(WEB_SCHEMES):
+        notify(f"Refused to open a non-web URL: {url}")
+        return
+    try:
+        subprocess.run(["open", target], timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        notify("Could not open URL")
+
+
 def clear_item_cache():
     cache_file = os.path.join(get_cache_dir(), "items.json")
     if os.path.exists(cache_file):
@@ -153,7 +174,7 @@ def main():
     elif action == "url":
         url = os.environ.get("url", "")
         if url:
-            subprocess.run(["open", url])
+            open_url(url)
 
     elif action == "refresh":
         clear_item_cache()

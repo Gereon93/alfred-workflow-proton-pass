@@ -194,6 +194,44 @@ def test_copy_secret_reports_failures_instead_of_copying(monkeypatch):
     assert failures == ["not logged in"]
 
 
+@pytest.mark.parametrize("url,expected", [
+    ("https://last.fm", "https://last.fm"),
+    ("http://last.fm", "http://last.fm"),
+    ("last.fm", "https://last.fm"),
+    ("last.fm/login?a=b", "https://last.fm/login?a=b"),
+])
+def test_open_url_opens_web_targets(spy_run, url, expected):
+    action.open_url(url)
+    cmd, kwargs = spy_run[0]
+    assert cmd == ["open", expected]
+    assert kwargs["timeout"] == 10
+
+
+@pytest.mark.parametrize("url", [
+    "file:///etc/passwd",
+    "ftp://example.com/x",
+    "x-malicious-handler://run",
+    "/Applications/Calculator.app",
+])
+def test_open_url_refuses_non_web_targets(monkeypatch, url):
+    monkeypatch.setattr(action.subprocess, "run", lambda *a, **k: pytest.fail("must not open"))
+    messages = []
+    monkeypatch.setattr(action, "notify", messages.append)
+    action.open_url(url)
+    assert "Refused" in messages[0]
+
+
+def test_open_url_reports_a_hung_open(monkeypatch):
+    def boom(*_a, **_k):
+        raise subprocess.TimeoutExpired("open", 10)
+
+    monkeypatch.setattr(action.subprocess, "run", boom)
+    messages = []
+    monkeypatch.setattr(action, "notify", messages.append)
+    action.open_url("https://last.fm")
+    assert messages == ["Could not open URL"]
+
+
 def test_clear_item_cache_removes_the_file(cache_dir):
     cache_file = cache_dir / "items.json"
     cache_file.write_text("[]")
