@@ -62,7 +62,7 @@ def notify(message):
              message, "Proton Pass"],
             capture_output=True, timeout=5,
         )
-    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+    except (OSError, subprocess.TimeoutExpired):
         pass
 
 
@@ -113,46 +113,50 @@ def get_totp(vault_name, item_title):
     return output, None
 
 
+def copy_with_clear(text):
+    copy_to_clipboard(text)
+    clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
+
+
+def copy_secret(fetch, vault_name, item_title):
+    """Copy a secret fetched via pass-cli, or surface why the fetch failed."""
+    secret, error = fetch(vault_name, item_title)
+    if secret:
+        copy_with_clear(secret)
+    else:
+        handle_failure(error)
+
+
+def clear_item_cache():
+    cache_file = os.path.join(get_cache_dir(), "items.json")
+    if os.path.exists(cache_file):
+        os.remove(cache_file)
+
+
 def main():
-    # All data from Alfred environment variables
+    """Dispatch the Alfred action; every input arrives as an environment variable."""
     action = os.environ.get("action", "")
     vault_name = os.environ.get("vaultName", "")
     item_title = os.environ.get("itemTitle", "")
-    username = os.environ.get("username", "")
-    url = os.environ.get("url", "")
 
     if action == "password":
-        pw, error = get_password(vault_name, item_title)
-        if pw:
-            copy_to_clipboard(pw)
-            clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
-        else:
-            handle_failure(error)
+        copy_secret(get_password, vault_name, item_title)
+
+    elif action == "totp":
+        copy_secret(get_totp, vault_name, item_title)
 
     elif action == "username":
+        username = os.environ.get("username", "")
         if username:
-            copy_to_clipboard(username)
-            clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
+            copy_with_clear(username)
 
     elif action == "url":
+        url = os.environ.get("url", "")
         if url:
             subprocess.run(["open", url])
 
-    elif action == "totp":
-        code, error = get_totp(vault_name, item_title)
-        if code:
-            copy_to_clipboard(code)
-            clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
-        else:
-            handle_failure(error)
-
     elif action == "refresh":
-        cache_dir = os.environ.get("alfred_workflow_cache", "")
-        if not cache_dir:
-            cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "alfred-proton-pass")
-        cache_file = os.path.join(cache_dir, "items.json")
-        if os.path.exists(cache_file):
-            os.remove(cache_file)
+        clear_item_cache()
 
 
 if __name__ == "__main__":
