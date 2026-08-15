@@ -6,3 +6,6 @@ __pycache__/
 /items.json
 prefs.plist
 FORUM_POST.md
+.coverage
+coverage.xml
+.pytest_cache/
