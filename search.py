@@ -13,6 +13,13 @@ import time
 
 CACHE_TTL = 300
 AUTH_TTL = 60
+DEFAULT_ICON = "icon.png"
+NON_LOGIN_TYPES = {
+    "Note": "note",
+    "CreditCard": "credit_card",
+    "Alias": "alias",
+    "Identity": "identity",
+}
 _DEFAULT_CLI_PATHS = [
     os.path.expanduser("~/.local/bin/pass-cli"),
     "/usr/local/bin/pass-cli",
@@ -141,22 +148,22 @@ def fetch_items_for_vault(vault_name):
     return [_normalize_item(i, vault_name) for i in raw_items if isinstance(i, dict)], None
 
 
+def _classify_content(inner):
+    """Return (login_data, item_type) for an item's inner content block."""
+    if not isinstance(inner, dict):
+        return {}, "login"
+    for login_key in ("Login", "login"):
+        if isinstance(inner.get(login_key), dict):
+            return inner[login_key], "login"
+    for content_key, item_type in NON_LOGIN_TYPES.items():
+        if content_key in inner:
+            return {}, item_type
+    return {}, "login"
+
+
 def _normalize_item(raw, vault_name=""):
     content = raw.get("content", {})
-    inner = content.get("content", {})
-    login_data = {}
-    item_type = "login"
-    if isinstance(inner, dict):
-        for key in ("Login", "login"):
-            if key in inner and isinstance(inner[key], dict):
-                login_data = inner[key]
-                break
-        else:
-            for key, t in {"Note": "note", "CreditCard": "credit_card",
-                           "Alias": "alias", "Identity": "identity"}.items():
-                if key in inner:
-                    item_type = t
-                    break
+    login_data, item_type = _classify_content(content.get("content", {}))
     urls = login_data.get("urls", [])
     return {
         "title": content.get("title", ""),
@@ -305,7 +312,7 @@ def make_command_rows(vault_names):
         "subtitle": "Force refresh from Proton Pass",
         "arg": "refresh",
         "match": ":refresh refresh cache clear reload",
-        "icon": {"path": "icon.png"},
+        "icon": {"path": DEFAULT_ICON},
         "variables": {"action": "refresh"},
     })
 
@@ -316,7 +323,7 @@ def make_command_rows(vault_names):
         "title": f"pass-cli: {'Installed' if cli_ok else 'Not found'}",
         "subtitle": f"Path: {PASS_CLI}" if cli_ok else "Install: curl -fsSL https://proton.me/download/pass-cli/install.sh | bash",
         "match": ":setup setup status cli",
-        "icon": {"path": "icon.png"},
+        "icon": {"path": DEFAULT_ICON},
         "valid": False,
     })
     if cli_ok:
@@ -326,7 +333,7 @@ def make_command_rows(vault_names):
             "title": f"Session: {'Active' if logged_in else 'Not logged in'}",
             "subtitle": "Authenticated" if logged_in else "Run 'pass-cli login' in Terminal",
             "match": ":setup setup status session login",
-            "icon": {"path": "icon.png"},
+            "icon": {"path": DEFAULT_ICON},
             "valid": False,
         })
 
@@ -338,7 +345,7 @@ def make_command_rows(vault_names):
             "title": "All vaults (no filter)",
             "subtitle": "Set VAULT_NAME in workflow config to limit",
             "match": ":vault vault vaults",
-            "icon": {"path": "icon.png"},
+            "icon": {"path": DEFAULT_ICON},
             "valid": False,
         })
     for name in (vault_names or []):
@@ -348,7 +355,7 @@ def make_command_rows(vault_names):
             "title": f"{pfx}{name}",
             "subtitle": "Set VAULT_NAME in workflow config to filter",
             "match": f":vault vault vaults {name}",
-            "icon": {"path": "icon.png"},
+            "icon": {"path": DEFAULT_ICON},
             "valid": False,
         })
 
@@ -379,7 +386,7 @@ def login_banner():
         "title": "Not logged in to Proton Pass",
         "subtitle": "Run 'pass-cli login' in Terminal, then search again",
         "valid": False,
-        "icon": {"path": "icon.png"},
+        "icon": {"path": DEFAULT_ICON},
     }]}
 
 

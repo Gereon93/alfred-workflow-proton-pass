@@ -8,6 +8,7 @@ import os
 import json
 import subprocess
 import sys
+from urllib.parse import urlparse
 
 _DEFAULT_CLI_PATHS = [
     os.path.expanduser("~/.local/bin/pass-cli"),
@@ -62,7 +63,7 @@ def notify(message):
              message, "Proton Pass"],
             capture_output=True, timeout=5,
         )
-    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+    except (OSError, subprocess.TimeoutExpired):
         pass
 
 
@@ -113,46 +114,82 @@ def get_totp(vault_name, item_title):
     return output, None
 
 
+def copy_with_clear(text):
+    copy_to_clipboard(text)
+    clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
+
+
+def copy_secret(fetch, vault_name, item_title):
+    """Copy a secret fetched via pass-cli, or surface why the fetch failed."""
+    secret, error = fetch(vault_name, item_title)
+    if secret:
+        copy_with_clear(secret)
+    else:
+        handle_failure(error)
+
+
+WEB_SCHEMES = ("http", "https")
+
+
+def web_target(url):
+    """Return the http(s) URL to hand to `open`, or None if it isn't a web URL.
+
+    The URL comes from a vault entry, and vaults can be shared — `open` would
+    otherwise launch a local file or a custom scheme handler on someone else's
+    say-so. Entries stored without a scheme stay openable as https; that
+    includes bare host:port, which urlparse reads as a scheme of its own.
+    """
+    parsed = urlparse(url)
+    scheme = parsed.scheme.lower()
+    if scheme in WEB_SCHEMES:
+        return url
+    looks_like_port = parsed.path.split("/")[0].isdigit()
+    if (not scheme or looks_like_port) and not url.startswith("/"):
+        return f"https://{url}"
+    return None
+
+
+def open_url(url):
+    target = web_target(url)
+    if target is None:
+        notify(f"Refused to open a non-web URL: {url}")
+        return
+    try:
+        subprocess.run(["open", target], timeout=10, check=True)
+    except (OSError, subprocess.TimeoutExpired, subprocess.CalledProcessError):
+        notify("Could not open URL")
+
+
+def clear_item_cache():
+    cache_file = os.path.join(get_cache_dir(), "items.json")
+    if os.path.exists(cache_file):
+        os.remove(cache_file)
+
+
 def main():
-    # All data from Alfred environment variables
+    """Dispatch the Alfred action; every input arrives as an environment variable."""
     action = os.environ.get("action", "")
     vault_name = os.environ.get("vaultName", "")
     item_title = os.environ.get("itemTitle", "")
-    username = os.environ.get("username", "")
-    url = os.environ.get("url", "")
 
     if action == "password":
-        pw, error = get_password(vault_name, item_title)
-        if pw:
-            copy_to_clipboard(pw)
-            clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
-        else:
-            handle_failure(error)
-
-    elif action == "username":
-        if username:
-            copy_to_clipboard(username)
-            clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
-
-    elif action == "url":
-        if url:
-            subprocess.run(["open", url])
+        copy_secret(get_password, vault_name, item_title)
 
     elif action == "totp":
-        code, error = get_totp(vault_name, item_title)
-        if code:
-            copy_to_clipboard(code)
-            clear_clipboard_later(CLIPBOARD_CLEAR_SECONDS)
-        else:
-            handle_failure(error)
+        copy_secret(get_totp, vault_name, item_title)
+
+    elif action == "username":
+        username = os.environ.get("username", "")
+        if username:
+            copy_with_clear(username)
+
+    elif action == "url":
+        url = os.environ.get("url", "")
+        if url:
+            open_url(url)
 
     elif action == "refresh":
-        cache_dir = os.environ.get("alfred_workflow_cache", "")
-        if not cache_dir:
-            cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "alfred-proton-pass")
-        cache_file = os.path.join(cache_dir, "items.json")
-        if os.path.exists(cache_file):
-            os.remove(cache_file)
+        clear_item_cache()
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 """Tests for logged-out detection in the Alfred Proton Pass workflow.
 
 Uses a stub pass-cli (no real vault access) so these never touch live data.
-Run: python3 test_logout.py
+Run: python3 -m pytest tests
 """
 
 import json
@@ -11,7 +11,7 @@ import subprocess
 import sys
 import tempfile
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STUB_LOGGED_OUT = """#!/bin/sh
 case "$1" in
@@ -43,7 +43,7 @@ def _run_search(cache_dir, stub_path, query=""):
     env["alfred_workflow_cache"] = cache_dir
     env["PASS_CLI_PATH"] = stub_path
     env["VAULT_NAME"] = ""  # exercise the no-configured-vault path
-    cmd = [sys.executable, os.path.join(HERE, "search.py")]
+    cmd = [sys.executable, os.path.join(ROOT, "search.py")]
     if query:
         cmd.append(query)  # Alfred passes the typed query as argv when it doesn't filter
     out = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=30)
@@ -163,7 +163,7 @@ def test_action_auth_failure_marks_logged_out_and_notifies():
         env["vaultName"] = "Personal"
         env["itemTitle"] = "last.fm"
         out = subprocess.run(
-            [sys.executable, os.path.join(HERE, "action.py")],
+            [sys.executable, os.path.join(ROOT, "action.py")],
             capture_output=True, text=True, env=env, timeout=30,
         )
         assert out.returncode == 0, f"action.py crashed: {out.stderr}"
