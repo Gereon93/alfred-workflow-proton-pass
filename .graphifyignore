@@ -1,0 +1,16 @@
+# Workstation & tooling configs
+.mcp.json
+.repowise/
+.vscode/
+.specify/
+.claude/
+.DS_Store
+
+# graphify output (self-reference)
+graphify-out/
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage*
